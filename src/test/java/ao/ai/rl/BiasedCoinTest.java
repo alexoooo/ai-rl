@@ -2,7 +2,10 @@ package ao.ai.rl;
 
 
 import ao.ai.rl.algo.BanditUnstructuredAgent;
+import ao.ai.rl.algo.bandit.Exp3BanditAgent;
 import ao.ai.rl.algo.bandit.Exp3ppBanditAgent;
+import ao.ai.rl.algo.bandit.SucbBanditAgent;
+import ao.ai.rl.algo.bandit.UcbBanditAgent;
 import ao.ai.rl.api.UnstructuredAgent;
 import ao.ai.rl.model.*;
 import org.junit.Before;
@@ -21,8 +24,10 @@ public class BiasedCoinTest
     @Before
     public void init() {
         agent = new BanditUnstructuredAgent(
+                Exp3BanditAgent::new
+//                SucbBanditAgent::new
 //                UcbBanditAgent::new
-                Exp3ppBanditAgent::new
+//                Exp3ppBanditAgent::new
         );
     }
 
@@ -33,11 +38,14 @@ public class BiasedCoinTest
         ActionRange actionRange = ActionRange.create(2);
 
         Feedback feedback = Feedback.ZERO;
-        for (int i = 0; i < 1500; i++) {
+        for (int i = 1; i <= 30_000; i++) {
             boolean isHeads = random.nextDouble() < 0.51;
 
             MixedAction mixedAction = agent.exploit(observationId, actionRange);
-            System.out.println("current guess: " + mixedAction);
+
+            if (i % 10_000 == 0) {
+                System.out.println("current guess: " + mixedAction + " - " + i);
+            }
 
             ActionId actionId = agent.learn(observationId, feedback, actionRange);
             boolean guessIsHeads = actionId.index() == 0;
@@ -48,8 +56,8 @@ public class BiasedCoinTest
         MixedAction mixedAction = agent.exploit(observationId, actionRange);
         assertThat(mixedAction.firstMostLikely().index()).isEqualTo(0);
 
-        MixedAction unknownMixedAction = agent.exploit(ObservationId.create(1), ActionRange.create(5));
-        System.out.println(unknownMixedAction);
+//        MixedAction unknownMixedAction = agent.exploit(ObservationId.create(1), ActionRange.create(5));
+//        System.out.println(unknownMixedAction);
     }
 
 }

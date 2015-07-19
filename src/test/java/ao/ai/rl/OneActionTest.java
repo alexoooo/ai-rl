@@ -1,7 +1,9 @@
 package ao.ai.rl;
 
 
+import ao.ai.rl.algo.BanditUnstructuredAgent;
 import ao.ai.rl.algo.RandomUnstructuredAgent;
+import ao.ai.rl.algo.bandit.Exp3BanditAgent;
 import ao.ai.rl.api.UnstructuredAgent;
 import ao.ai.rl.model.*;
 import org.junit.Before;
@@ -13,13 +15,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class OneActionTest
 {
-    Random random = new Random();
     UnstructuredAgent agent;
 
 
     @Before
-    public void init() {
-        agent = new RandomUnstructuredAgent(random);
+    public void init()
+    {
+        agent = new BanditUnstructuredAgent(
+                Exp3BanditAgent::new
+        );
     }
 
 

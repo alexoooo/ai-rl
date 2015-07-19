@@ -4,8 +4,10 @@ package ao.ai.rl.model;
 import autovalue.shaded.com.google.common.common.base.Joiner;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.*;
+import com.google.common.primitives.Doubles;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -74,18 +76,20 @@ public abstract class ProbabilityMass {
     public static ProbabilityMass createWeighted(List<Double> weights, int size) {
         DoubleSummaryStatistics stats = weights.stream().mapToDouble(Double::doubleValue).summaryStatistics();
 
-        double range = stats.getMax() - stats.getMin();
-        if (range < EPSILON) {
-            return createUniform(size);
+        checkArgument(stats.getMin() >= 0, "negative weight: %s", weights);
+
+        if (stats.getSum() < EPSILON) {
+            return ProbabilityMass.createUniform(size);
         }
 
-        double[] normalizedWeights = weights.stream().mapToDouble(w -> (w - stats.getMin()) / range).toArray();
-        double normalizedSum = StreamSupport.doubleStream(Spliterators.spliterator(normalizedWeights, 0), false).sum();
-        checkState(Double.isFinite(normalizedSum));
+        if (! Double.isFinite(stats.getSum())) {
+            List<Double> scaled = Doubles.asList(weights.stream().mapToDouble(e -> e / 2).toArray());
+            return createWeighted(scaled, size);
+        }
 
         ImmutableList.Builder<Probability> probabilities = ImmutableList.builder();
-        for (double normalizedWeight : normalizedWeights) {
-            double normalized = normalizedWeight / normalizedSum;
+        for (double weight : weights) {
+            double normalized = weight / stats.getSum();
 
             Probability probability = Probability.create(normalized);
             probabilities.add(probability);

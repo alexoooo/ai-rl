@@ -26,6 +26,9 @@ public abstract class MixedAction {
     public static MixedAction createHistogram(Multiset<Integer> histogram, int size) {
         return create(ProbabilityMass.createHistogram(histogram, size));
     }
+    public static MixedAction createLiteral(double[] probabilities) {
+        return create(ProbabilityMass.create(Probability.createAll(probabilities)));
+    }
     public static MixedAction create(ProbabilityMass probabilityMass) {
         return new AutoValue_MixedAction(probabilityMass);
     }

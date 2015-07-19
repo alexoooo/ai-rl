@@ -2,6 +2,8 @@ package ao.ai.rl;
 
 
 import ao.ai.rl.algo.BanditUnstructuredAgent;
+import ao.ai.rl.algo.bandit.Exp3BanditAgent;
+import ao.ai.rl.algo.bandit.SucbBanditAgent;
 import ao.ai.rl.api.UnstructuredAgent;
 import ao.ai.rl.model.*;
 import autovalue.shaded.com.google.common.common.collect.ImmutableList;
@@ -24,8 +26,14 @@ public class RockPaperScissorsTest {
 
     @Before
     public void init() {
-        agentA = new BanditUnstructuredAgent();
-        agentB = new BanditUnstructuredAgent();
+        agentA = new BanditUnstructuredAgent(
+                Exp3BanditAgent::new
+//                SucbBanditAgent::new
+        );
+        agentB = new BanditUnstructuredAgent(
+                Exp3BanditAgent::new
+//                SucbBanditAgent::new
+        );
     }
 
 
@@ -34,13 +42,13 @@ public class RockPaperScissorsTest {
         train();
 
         MixedAction mixedActionA = agentA.exploit(observation, actionRange);
-        MixedAction mixedActionB = agentA.exploit(observation, actionRange);
+        MixedAction mixedActionB = agentB.exploit(observation, actionRange);
 
         Probability minimumA = mixedActionA.actionProbabilities().min();
         Probability minimumB = mixedActionB.actionProbabilities().min();
 
-        assertThat(minimumA.value()).isGreaterThan(0.3);
-        assertThat(minimumB.value()).isGreaterThan(0.3);
+        assertThat(minimumA.value()).isGreaterThan(0.28);
+        assertThat(minimumB.value()).isGreaterThan(0.28);
     }
 
 
@@ -48,7 +56,13 @@ public class RockPaperScissorsTest {
         Feedback feedbackA = Feedback.ZERO;
         Feedback feedbackB = Feedback.ZERO;
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 1; i <= 40_000; i++) {
+            MixedAction strategy = agentA.exploit(observation, actionRange);
+
+            if (i % 10_000 == 0) {
+                System.out.println("strategy: " + strategy + " - " + i);
+            }
+
             Act actionA = Act.VALUES.get(agentA.learn(observation, feedbackA, actionRange).index());
             Act actionB = Act.VALUES.get(agentB.learn(observation, feedbackB, actionRange).index());
 
